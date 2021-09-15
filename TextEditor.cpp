@@ -48,6 +48,8 @@ TextEditor::TextEditor()
 	, mIgnoreImGuiChild(false)
 	, mShowWhitespaces(true)
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
+    , mBreakpointGutterEnabled(false)
+    , mBreakpointIconRadius(5.0f)
 {
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::HLSL());
@@ -890,6 +892,13 @@ void TextEditor::Render()
 	snprintf(buf, 16, " %d ", globalLineMax);
 	mTextStart = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, buf, nullptr, nullptr).x + mLeftMargin;
 
+    // Consider breakpoint gutter
+    const float bpIconLeftRightPadding = 3.f;
+    if(mBreakpointGutterEnabled)
+    {
+        mTextStart += mBreakpointIconRadius * 2.0f + bpIconLeftRightPadding * 2.0f;
+    }
+
 	if (!mLines.empty())
 	{
 		float spaceSize = ImGui::GetFont()->CalcTextSizeA(ImGui::GetFontSize(), FLT_MAX, -1.0f, " ", nullptr, nullptr).x;
@@ -932,7 +941,7 @@ void TextEditor::Render()
 			{
 				auto end = ImVec2(lineStartScreenPos.x + contentSize.x + 2.0f * scrollX, lineStartScreenPos.y + mCharAdvance.y);
 				drawList->AddRectFilled(start, end, mPalette[(int)PaletteIndex::Breakpoint]);
-			}
+            }
 
 			// Draw error markers
 			auto errorIt = mErrorMarkers.find(lineNo + 1);
@@ -1076,6 +1085,14 @@ void TextEditor::Render()
 				drawList->AddText(newOffset, prevColor, mLineBuffer.c_str());
 				mLineBuffer.clear();
 			}
+
+            // Draw breakpoint "icons" in gutter here so we can render it on top of everything
+            if(mBreakpointGutterEnabled && mBreakpoints.count(lineNo + 1) != 0)
+            {
+                const float yOffset = mCharAdvance.y * 0.5f;
+                ImVec2 iconPos = ImVec2(cursorScreenPos.x + mBreakpointIconRadius + bpIconLeftRightPadding, cursorScreenPos.y + lineNo * mCharAdvance.y + yOffset);
+                drawList->AddCircleFilled(iconPos, mBreakpointIconRadius, mPalette[(int)PaletteIndex::BreakpointIcon]);
+            }
 
 			++lineNo;
 		}
@@ -2022,11 +2039,12 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0xffe0e0e0, // Cursor
 			0x80a06020, // Selection
 			0x800020ff, // ErrorMarker
-			0x40f08000, // Breakpoint
+			0x00000000, //0x40f08000, // Breakpoint
 			0xff707000, // Line number
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40a0a0a0, // Current line edge
+            0xff4151ff, // Breakpoint icon
 		} };
 	return p;
 }
@@ -2055,7 +2073,8 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
-		} };
+            0xff4151ff, // Breakpoint icon
+        }};
 	return p;
 }
 
@@ -2083,7 +2102,8 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
-		} };
+            0xff4151ff, // Breakpoint icon
+        }};
 	return p;
 }
 

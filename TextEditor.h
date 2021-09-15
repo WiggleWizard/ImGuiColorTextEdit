@@ -36,7 +36,8 @@ public:
 		CurrentLineFill,
 		CurrentLineFillInactive,
 		CurrentLineEdge,
-		Max
+        BreakpointIcon,
+        Max
 	};
 
 	enum class SelectionMode
@@ -230,6 +231,9 @@ public:
 	inline void SetShowWhitespaces(bool aValue) { mShowWhitespaces = aValue; }
 	inline bool IsShowingWhitespaces() const { return mShowWhitespaces; }
 
+    inline void SetBreakpointGutterEnabled(bool aValue) { mBreakpointGutterEnabled = aValue; }
+    inline int GetBreakpointGutterEnabled() const { return mBreakpointGutterEnabled; }
+
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
 
@@ -371,6 +375,8 @@ private:
 	bool mHandleMouseInputs;
 	bool mIgnoreImGuiChild;
 	bool mShowWhitespaces;
+    bool mBreakpointGutterEnabled;
+    float mBreakpointIconRadius;
 
 	Palette mPaletteBase;
 	Palette mPalette;

@@ -963,7 +963,11 @@ void TextEditor::Render()
     const float bpIconLeftRightPadding = 3.f;
     if(mBreakpointGutterEnabled)
     {
-        mTextStart += mBreakpointIconRadius * 2.0f + bpIconLeftRightPadding * 2.0f;
+        mTextStart += mBreakpointGutterWidth;
+
+        ImVec2 gutterStart = ImGui::GetWindowPos();
+        ImVec2 gutterEnd = {gutterStart.x + mBreakpointGutterWidth, gutterStart.y + globalLineMax * mCharAdvance.y};
+        drawList->AddRectFilled(gutterStart, gutterEnd, mPalette[(int)PaletteIndex::BreakpointGutterFill]);
     }
 
 	if (!mLines.empty())
@@ -2111,6 +2115,7 @@ const TextEditor::Palette & TextEditor::GetDarkPalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40a0a0a0, // Current line edge
+            0xff333333, // Breakpoint gutter fill
             0xff4151ff, // Breakpoint icon
 		} };
 	return p;
@@ -2140,6 +2145,7 @@ const TextEditor::Palette & TextEditor::GetLightPalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
+            0xff333333, // Breakpoint gutter fill
             0xff4151ff, // Breakpoint icon
         }};
 	return p;
@@ -2169,6 +2175,7 @@ const TextEditor::Palette & TextEditor::GetRetroBluePalette()
 			0x40000000, // Current line fill
 			0x40808080, // Current line fill (inactive)
 			0x40000000, // Current line edge
+            0xff333333, // Breakpoint gutter fill
             0xff4151ff, // Breakpoint icon
         }};
 	return p;

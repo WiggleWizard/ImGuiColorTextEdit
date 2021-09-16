@@ -37,6 +37,7 @@ public:
 		CurrentLineFill,
 		CurrentLineFillInactive,
 		CurrentLineEdge,
+        BreakpointGutterFill,
         BreakpointIcon,
         Max
 	};

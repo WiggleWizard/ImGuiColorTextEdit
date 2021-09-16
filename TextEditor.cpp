@@ -50,6 +50,8 @@ TextEditor::TextEditor()
 	, mStartTime(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
     , mBreakpointGutterEnabled(false)
     , mBreakpointIconRadius(5.0f)
+    , mBreakpointIconPadding(3.0f)
+    , mBreakpointGutterWidth((mBreakpointIconRadius + mBreakpointIconPadding) * 2.0f)
 {
 	SetPalette(GetDarkPalette());
 	SetLanguageDefinition(LanguageDefinition::HLSL());
@@ -697,6 +699,11 @@ ImU32 TextEditor::GetGlyphColor(const Glyph & aGlyph) const
 	return color;
 }
 
+void TextEditor::RecalculateBreakpointGutterWidth()
+{
+    mBreakpointGutterWidth = (mBreakpointIconRadius + mBreakpointIconPadding) * 2.0f;
+}
+
 void TextEditor::HandleKeyboardInputs()
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -707,7 +714,21 @@ void TextEditor::HandleKeyboardInputs()
 	if (ImGui::IsWindowFocused())
 	{
 		if (ImGui::IsWindowHovered())
+        {
 			ImGui::SetMouseCursor(ImGuiMouseCursor_TextInput);
+
+            // Set cursor back to normal if hovering breakpoint gutter
+            if(mBreakpointGutterEnabled)
+            {
+                ImVec2 origin = ImGui::GetCursorScreenPos();
+                ImVec2 cursorPos = ImGui::GetMousePos();
+                ImVec2 local(cursorPos.x - origin.x, cursorPos.y - origin.y);
+                if(local.x < mBreakpointGutterWidth)
+                {
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+                }
+            }
+        }
 		//ImGui::CaptureKeyboardFromApp(true);
 
 		io.WantCaptureKeyboard = true;
@@ -833,14 +854,60 @@ void TextEditor::HandleMouseInputs()
 			*/
 			else if (click)
 			{
-				mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = ScreenPosToCoordinates(ImGui::GetMousePos());
-				if (ctrl)
-					mSelectionMode = SelectionMode::Word;
-				else
-					mSelectionMode = SelectionMode::Normal;
-				SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+                TextEditor::Coordinates cursorCoords = ScreenPosToCoordinates(ImGui::GetMousePos());
 
-				mLastClick = (float)ImGui::GetTime();
+                // Sink mouse into gutter if we're within it
+                bool handled = false;
+                bool clickedInGutter = false;
+                if(mBreakpointGutterEnabled)
+                {
+                    ImVec2 origin = ImGui::GetCursorScreenPos();
+                    ImVec2 cursorPos = ImGui::GetMousePos();
+                    ImVec2 local(cursorPos.x - origin.x, cursorPos.y - origin.y);
+                    if(local.x < mBreakpointGutterWidth)
+                    {
+                        // Check if we already have a breakpoint here or not. Invert
+                        int breakpointLine = cursorCoords.mLine + 1;
+                        bool breakpointExists = true;
+                        if(mBreakpoints.find(breakpointLine) == mBreakpoints.end())
+                        {
+                            breakpointExists = false;
+                        }
+
+                        bool processInternally = true;
+
+                        // If we have a callback bound then let the bound method decide if we want to process internally or not
+                        if(mBreakpointToggleCallback)
+                            processInternally = mBreakpointToggleCallback(breakpointExists);
+
+                        if(processInternally)
+                        {
+                            if(!breakpointExists)
+                            {
+                                mBreakpoints.insert(cursorCoords.mLine + 1);
+                            }
+                            else
+                            {
+                                mBreakpoints.erase(breakpointLine);
+                            }
+                        }
+
+                        handled = true;
+                    }
+                }
+
+                if(!handled)
+                {
+                    mState.mCursorPosition = mInteractiveStart = mInteractiveEnd = cursorCoords;
+
+                    if(ctrl)
+                        mSelectionMode = SelectionMode::Word;
+                    else
+                        mSelectionMode = SelectionMode::Normal;
+                    SetSelection(mInteractiveStart, mInteractiveEnd, mSelectionMode);
+
+                    mLastClick = (float)ImGui::GetTime();
+                }
 			}
 			// Mouse left button dragging (=> update selection)
 			else if (ImGui::IsMouseDragging(0) && ImGui::IsMouseDown(0))

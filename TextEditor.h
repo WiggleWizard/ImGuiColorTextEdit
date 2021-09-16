@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <map>
 #include <regex>
+#include <functional>
 #include "imgui.h"
 
 class TextEditor
@@ -234,6 +235,8 @@ public:
     inline void SetBreakpointGutterEnabled(bool aValue) { mBreakpointGutterEnabled = aValue; }
     inline int GetBreakpointGutterEnabled() const { return mBreakpointGutterEnabled; }
 
+    void SetBreakpointToggleCallback(std::function<bool(bool)> cb) { mBreakpointToggleCallback = cb; }
+
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
 
@@ -347,6 +350,7 @@ private:
 	std::string GetWordUnderCursor() const;
 	std::string GetWordAt(const Coordinates& aCoords) const;
 	ImU32 GetGlyphColor(const Glyph& aGlyph) const;
+    void RecalculateBreakpointGutterWidth();
 
 	void HandleKeyboardInputs();
 	void HandleMouseInputs();
@@ -377,6 +381,9 @@ private:
 	bool mShowWhitespaces;
     bool mBreakpointGutterEnabled;
     float mBreakpointIconRadius;
+    float mBreakpointIconPadding;
+    float mBreakpointGutterWidth; // Set programmatically from icon radius and padding
+    std::function<bool(bool)> mBreakpointToggleCallback;
 
 	Palette mPaletteBase;
 	Palette mPalette;

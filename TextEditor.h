@@ -236,7 +236,7 @@ public:
     inline void SetBreakpointGutterEnabled(bool aValue) { mBreakpointGutterEnabled = aValue; }
     inline int GetBreakpointGutterEnabled() const { return mBreakpointGutterEnabled; }
 
-    void SetBreakpointToggleCallback(std::function<bool(bool)> cb) { mBreakpointToggleCallback = cb; }
+    void SetBreakpointToggleCallback(std::function<bool(bool, uint64_t)> cb) { mBreakpointToggleCallback = cb; }
 
 	void SetTabSize(int aValue);
 	inline int GetTabSize() const { return mTabSize; }
@@ -384,7 +384,7 @@ private:
     float mBreakpointIconRadius;
     float mBreakpointIconPadding;
     float mBreakpointGutterWidth; // Set programmatically from icon radius and padding
-    std::function<bool(bool)> mBreakpointToggleCallback;
+    std::function<bool(bool, uint64_t)> mBreakpointToggleCallback;
 
 	Palette mPaletteBase;
 	Palette mPalette;

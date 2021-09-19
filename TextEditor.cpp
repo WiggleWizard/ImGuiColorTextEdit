@@ -878,13 +878,13 @@ void TextEditor::HandleMouseInputs()
 
                         // If we have a callback bound then let the bound method decide if we want to process internally or not
                         if(mBreakpointToggleCallback)
-                            processInternally = mBreakpointToggleCallback(breakpointExists);
+                            processInternally = mBreakpointToggleCallback(breakpointExists, breakpointLine);
 
                         if(processInternally)
                         {
                             if(!breakpointExists)
                             {
-                                mBreakpoints.insert(cursorCoords.mLine + 1);
+                                mBreakpoints.insert(breakpointLine);
                             }
                             else
                             {
